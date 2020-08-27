@@ -7,7 +7,12 @@ import * as Long from 'long'
 import * as raw from 'raw-body'
 import { Redis } from './Redis'
 import { Config } from './Config'
-import { decodeReceipt, Receipt, ReceiptWithHMAC, verifyReceipt } from 'ilp-protocol-stream'
+import {
+  decodeReceipt,
+  Receipt,
+  ReceiptWithHMAC,
+  verifyReceipt,
+} from 'ilp-protocol-stream'
 import { generateReceiptSecret, hmac } from '../util/crypto'
 
 const RECEIPT_LENGTH_BASE64 = 80
@@ -17,18 +22,18 @@ export class Balances {
   private redis: Redis
   private server: Server
 
-  constructor (deps: Injector) {
+  constructor(deps: Injector) {
     this.config = deps(Config)
     this.redis = deps(Redis)
   }
 
-  start (): void {
+  start(): void {
     const koa = new Koa()
     const router = new Router()
 
     router.post('/balances/:id\\:creditReceipt', async (ctx: Koa.Context) => {
       const body = await raw(ctx.req, {
-        limit: RECEIPT_LENGTH_BASE64
+        limit: RECEIPT_LENGTH_BASE64,
       })
 
       let receipt: Receipt
@@ -56,7 +61,7 @@ export class Balances {
       try {
         const balance = await this.redis.creditBalance(ctx.params.id, amount)
         ctx.response.body = balance.toString()
-        return ctx.status = 200
+        return (ctx.status = 200)
       } catch (error) {
         ctx.throw(409, error.message)
       }
@@ -64,7 +69,7 @@ export class Balances {
 
     router.post('/balances/:id\\:spend', async (ctx: Koa.Context) => {
       const body = await raw(ctx.req, {
-        limit: Long.MAX_VALUE.toString().length
+        limit: Long.MAX_VALUE.toString().length,
       })
 
       const amount = Long.fromString(body.toString(), true)
@@ -72,7 +77,7 @@ export class Balances {
       try {
         const balance = await this.redis.spendBalance(ctx.params.id, amount)
         ctx.response.body = balance.toString()
-        return ctx.status = 200
+        return (ctx.status = 200)
       } catch (error) {
         // 404 for unknown balance
         if (error.message === 'balance does not exist') {
@@ -92,7 +97,7 @@ export class Balances {
     })
   }
 
-  stop (): void {
+  stop(): void {
     this.server.close()
   }
 }
